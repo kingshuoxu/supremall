@@ -1,40 +1,88 @@
 <template>
   <div id="detail">
     <!-- 导航 -->
-    <detail-nav-bar></detail-nav-bar>
-    <detail-swiper :top-images='topImages'></detail-swiper>
+    <detail-nav-bar class="detail-nav-bar" ref="scroll"></detail-nav-bar>
+    <scroll class='content'>
+      <detail-swiper :top-images='topImages'></detail-swiper>
+      <detail-base-info :goods="goods"></detail-base-info>
+      <detail-shop-info :shop="shop"></detail-shop-info>
+      <detail-goods-info :detail-info="detailInfo" @imageLoad='imageLoad'></detail-goods-info>
+    </scroll>
   </div>
 </template>
 
 <script>
 import DetailNavBar from './childComps/DetailNavBar.vue'
 import DetailSwiper from './childComps/DetailSwiper.vue'
+import DetailBaseInfo from './childComps/DetailBaseInfo.vue'
+import DetailShopInfo from './childComps/DetailShopInfo.vue'
+import DetailGoodsInfo from './childComps/DetailGoodsInfo.vue'
 
-import {getDetail} from '../../network/detail'
+import Scroll from '../../components/common/scroll/Scroll'
+
+import {getDetail,GoodsInfo,Shop} from '../../network/detail'
 
 export default {
   name: 'Detail',
 
   components: {
     DetailNavBar,
-    DetailSwiper
+    DetailSwiper,
+    DetailBaseInfo,
+    DetailShopInfo,
+    Scroll,
+    DetailGoodsInfo,
   },
   data() {
     return {
       iid: null,
       topImages: [],
+      goods: {},
+      shop: {},
+      detailInfo: {},
     }
   },
   created() {
     this.iid = this.$route.params.iid
     getDetail(this.iid).then(res => {
       // 1.获取顶部轮播数据
-      this.topImages = res.result.itemInfo.topImages
+      const data = res.result
+      this.topImages = data.itemInfo.topImages
+
+      // 2.获取商品信息
+      this.goods = new GoodsInfo(data.itemInfo, data.columns, data.shopInfo.services)
+
+      // 3.创建店铺信息
+      this.shop = new Shop(data.shopInfo)
+
+      // 4.获取商品详细信息
+      this.detailInfo = data.detailInfo
     })
   },
+  methods: {
+    imageLoad() {
+      this.$refs.scroll.refresh
+    }
+  }
 }
 </script>
 
 <style scoped>
+  #detail {
+    position: relative;
+    z-index: 9;
+    background-color: #fff;
+    height: 100vh;
+  }
+
+  .detail-nav-bar {
+    position: relative;
+    z-index: 9;
+    background-color: #fff;
+  }
+
+  .content {
+    height: calc(100% - 44px);
+  }
 
 </style>
