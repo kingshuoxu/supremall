@@ -28,6 +28,7 @@ import BackTop from '../../components/content/backTop/BackTop.vue'
 
 import {getHomeMultidata,getHomeGoods} from 'network/home'
 import {debounce} from '../../common/utils'
+import {itemListerMixin} from '../../common/mixin'
 
 export default {
   name: 'Home',
@@ -41,6 +42,7 @@ export default {
     Scroll,
     BackTop
   },
+  mixins: [itemListerMixin],
   data() {
     return {
       banners: [],
@@ -55,6 +57,7 @@ export default {
       tabOffsetTop: 0,
       isTabFixed: false,
       saveY: 0,
+      itemImgListener: null,
     }
   },
   computed:  {
@@ -67,7 +70,11 @@ export default {
     this.$refs.scroll.refresh();
   },
   deactivated() {
+    // 1.保存y值
     this.saveY = this.$refs.scroll.getScrollY()
+
+    // 2.取消全局事件监听
+    this.$bus.$off('itemImageLoad', this.itemImgListener)
   },
   created() {
     // 1.请求多个数据
@@ -80,12 +87,15 @@ export default {
 
   },
   mounted() {
-    const refresh = debounce(this.$refs.scroll && this.$refs.scroll.refresh, 50);
-    // 3.监听图片加载完成
-    this.$bus.$on('itemImageLoad', () => {
-      // this.$refs.scroll && this.$refs.scroll.refresh();
-      refresh();
-    })
+    // const refresh = debounce(this.$refs.scroll && this.$refs.scroll.refresh, 50);
+    // // 3.监听图片加载完成
+
+    // // 对监听的事件保存
+    // this.itemImgListener = () => {
+    //   // this.$refs.scroll && this.$refs.scroll.refresh();
+    //   refresh();
+    // }
+    // this.$bus.$on('itemImageLoad', this.itemImgListener)
 
   },
   methods: {
